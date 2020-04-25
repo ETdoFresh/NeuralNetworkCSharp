@@ -28,32 +28,26 @@ namespace ConsoleApplication1
             var outputLayerNeurons = 1;
             var neuralNetwork = new Network(inputLayerNeurons, hiddenLayerNeurons, outputLayerNeurons);
 
-            // Establish Inputs and Expected Outputs
-            var inputs = new List<double[]>
-            {
-                new[] {0.0, 0.0}, new[] {0.0, 1.0}, new[] {1.0, 0.0}, new[] {1.0, 1.0}
-            };
-            var expectedOutputs = new List<double[]>
-            {
-                new[] {0.0}, new[] {1.0}, new[] {1.0}, new[] {0.0}
-            };
-
+            var inputOutputPairs = new Batch(
+                new Pair(new Input(0, 0), new Output(0)),
+                new Pair(new Input(0, 1), new Output(1)),
+                new Pair(new Input(1, 0), new Output(1)),
+                new Pair(new Input(1, 1), new Output(0))
+            );
 
             var randomIndex = random.Next(4);
-            var mse = neuralNetwork.ComputeError(inputs[randomIndex], expectedOutputs[randomIndex]);
+            var mse = neuralNetwork.ComputeError(inputOutputPairs[randomIndex]);
             Console.WriteLine($"Starting Mean Squared Error: {mse}");
-            
+
             for (int i = 0; i < 10000; i++)
             {
-                randomIndex = random.Next(4);
-                // TODO: We are propagating via one pair at a time...
-                // we may need to get the average error over a training set and then use that to correct weights...
-                // Sum(outputLayer.mse) / n
-                neuralNetwork.BackPropagate(inputs[randomIndex], expectedOutputs[randomIndex]);
+                randomIndex = 0;//random.Next(4);
+                var pair = inputOutputPairs[randomIndex];
+                neuralNetwork.BackPropagate(pair);
                 var outputNeuron = neuralNetwork.outputLayer.neurons[0];
-                mse = neuralNetwork.ComputeError(inputs[randomIndex], expectedOutputs[randomIndex]);
+                mse = neuralNetwork.ComputeError(pair);
                 Console.WriteLine(
-                    $"Run #{i}: input: {inputs[randomIndex][0]} {inputs[randomIndex][1]} output: {outputNeuron.activationOutput} error: {mse}");
+                    $"Run #{i}: input: {pair.input[0]} {pair.input[1]} output: {outputNeuron.outputA} error: {mse}");
             }
         }
     }

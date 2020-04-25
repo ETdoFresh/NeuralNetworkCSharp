@@ -3,6 +3,7 @@
 namespace NeuralNetwork {
     public class Layer
     {
+        public double bias;
         public Layer previous;
         public Layer next;
         public List<Neuron> neurons = new List<Neuron>();

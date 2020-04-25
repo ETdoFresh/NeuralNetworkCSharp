@@ -38,10 +38,14 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Batch.cs" />
         <Compile Include="Connection.cs" />
+        <Compile Include="Input.cs" />
         <Compile Include="Layer.cs" />
         <Compile Include="Network.cs" />
         <Compile Include="Neuron.cs" />
+        <Compile Include="Output.cs" />
+        <Compile Include="Pair.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="Sigmoid.cs" />
     </ItemGroup>

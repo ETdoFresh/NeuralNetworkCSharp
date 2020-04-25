@@ -8,9 +8,9 @@ namespace NeuralNetwork {
             return 1 / (1 + Math.Pow(Math.E, -x));
         }
 
-        public static double Derivative(double value)
+        public static double Derivative(double sigmoid)
         {
-            return value * (1 - Value(value));
+            return sigmoid * (1 - sigmoid);
         }
     }
 }

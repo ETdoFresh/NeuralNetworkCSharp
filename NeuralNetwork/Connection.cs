@@ -10,5 +10,8 @@
             this.input = input;
             this.output = output;
         }
+
+        public override string ToString()
+            => $"{input} => {output} w: {weight}";
     }
 }

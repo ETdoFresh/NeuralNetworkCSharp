@@ -20,9 +20,9 @@ namespace NeuralNetwork
 
             // Create Layers
             inputLayer = new Layer(neuronCounts[0]);
-            outputLayer = new Layer(neuronCounts[neuronCounts.Length - 1]);
             for (var i = 1; i < neuronCounts.Length - 1; i++)
                 hiddenLayers.Add(new Layer(neuronCounts[i]));
+            outputLayer = new Layer(neuronCounts[neuronCounts.Length - 1]);
 
             // Get All Neurons
             foreach (var neuron in inputLayer.neurons)
@@ -52,8 +52,10 @@ namespace NeuralNetwork
             foreach (var connection in connections)
                 connection.weight = random.NextDouble();
 
-            foreach (var neuron in neurons)
-                neuron.bias = random.NextDouble();
+            // inputLayer.bias = random.NextDouble();
+            // foreach (var layer in hiddenLayers)
+            //     layer.bias = random.NextDouble();
+            // outputLayer.bias = random.NextDouble();
         }
 
         private void FullyConnect(Layer a, Layer b)
@@ -73,80 +75,168 @@ namespace NeuralNetwork
         public void SetInputs(double[] inputs)
         {
             for (int i = 0; i < inputs.Length; i++)
-                inputLayer.neurons[i].inputValue = inputs[i];
+                inputLayer.neurons[i].inputZ = inputs[i];
         }
 
         public void ForwardPass(double[] inputs)
         {
             SetInputs(inputs);
-            for (var layer = inputLayer; layer != null; layer = layer.next)
+            foreach (var inputNeuron in inputLayer.neurons)
+                inputNeuron.outputA = Sigmoid.Value(inputNeuron.inputZ + inputLayer.bias);
+
+            for (var layer = inputLayer.next; layer != null; layer = layer.next)
+                foreach (var neuron in layer.neurons)
+                {
+                    foreach (var connection in neuron.inputs)
+                        neuron.inputZ += connection.input.outputA * connection.weight;
+
+                    neuron.outputA = Sigmoid.Value(neuron.inputZ + layer.bias);
+                }
+        }
+
+        // public void BackPropagate(Batch batch)
+        // {
+        //     var learning_rate = 0.1;
+        //     for (var layer = outputLayer; layer.previous != null; layer = layer.previous)
+        //         foreach (var neuron in layer.neurons)
+        //         foreach (var connection in neuron.inputs)
+        //         {
+        //             var deltaBiasSum = 0.0;
+        //             var deltaWeightSum = 0.0;
+        //             foreach (var pair in batch)
+        //             {
+        //                 ForwardPass(pair.input.ToArray());
+        //                 for (var i = 0; i < pair.output.Count; i++)
+        //                     outputLayer.neurons[i].expectedActivationOutput = pair.output[i];
+        //
+        //                 // dLoss/dWeight = (dLoss/dCurrentActivation)(dCurrentActivation/dCurrentInput)(dCurrentInput/dWeight)
+        //                 // dLoss/dWeight = 2(a-y)(g'(z))(prevA)
+        //                 var currentActivation = neuron.outputA;
+        //                 var expectedActivation = neuron.expectedActivationOutput;
+        //                 var derivativeInput = Sigmoid.Derivative(neuron.inputZ);
+        //                 var previousActivation = connection.input.outputA;
+        //
+        //                 var delta = 2 * (currentActivation - expectedActivation);
+        //                 delta *= derivativeInput;
+        //
+        //                 deltaBiasSum += delta;
+        //
+        //                 delta *= previousActivation;
+        //                 deltaWeightSum += delta;
+        //             }
+        //
+        //             neuron.bias += learning_rate * deltaBiasSum / batch.Count;
+        //             connection.weight += learning_rate * deltaWeightSum / batch.Count;
+        //         }
+        // }
+
+        public void BackPropagate(Pair pair)
+        {
+            var input = pair.input.ToArray();
+            var output = pair.output.ToArray();
+            var learning_rate = 0.1;
+
+            ForwardPass(input);
+            
+            for (var i = 0; i < outputLayer.neurons.Count; i++)
+            {
+                var neuron = outputLayer.neurons[i];
+                var outputA = neuron.outputA;
+                var expectedOutput = output[i];
+                neuron.costCorrection = 2 * (outputA - expectedOutput);
+            }
+
+            for (var layer = outputLayer.previous; layer != inputLayer; layer = layer.previous)
             {
                 foreach (var neuron in layer.neurons)
                 {
-                    if (layer != inputLayer)
-                        neuron.inputValue = 0;
-
-                    foreach (var connection in neuron.inputs)
-                        neuron.inputValue += connection.input.activationOutput * connection.weight;
-
-                    neuron.activationOutput = Sigmoid.Value(neuron.inputValue + neuron.bias);
+                    neuron.costCorrection = 0;
+                    foreach (var connection in neuron.outputs)
+                    {
+                        var correction = connection.output.costCorrection;
+                        correction *= Sigmoid.Derivative(connection.output.outputA);
+                        correction *= connection.weight;
+                        neuron.costCorrection += correction;
+                    }
                 }
             }
+
+            foreach (var connection in connections)
+            {
+                var correction = connection.output.costCorrection;
+                correction *= Sigmoid.Derivative(connection.output.outputA);
+                correction *= connection.input.outputA;
+                correction *= learning_rate;
+                connection.weight += correction;
+            }
+
+            // foreach(var hiddenLayer in hiddenLayers)
+            // foreach (var neuron in hiddenLayer.neurons)
+            //     hiddenLayer.bias += neuron.biasCorrection * learning_rate;
         }
 
-        public void BackPropagate(double[] inputs, double[] expectedOutputs)
+        public double ComputeError(Pair pair)
         {
-            ForwardPass(inputs);
-            for (var i = 0; i < expectedOutputs.Length; i++)
-                outputLayer.neurons[i].expectedActivationOutput = expectedOutputs[i];
-
-            var learning_rate = 0.1;
-            for (var layer = outputLayer; layer.previous != null; layer = layer.previous)
-                foreach (var neuron in layer.neurons)
-                foreach (var connection in neuron.inputs)
-                {
-                    // dLoss/dWeight = (dLoss/dCurrentActivation)(dCurrentActivation/dCurrentInput)(dCurrentInput/dWeight)
-                    // dLoss/dWeight = 2(a-y)(g'(z))(prevA)
-                    var currentActivation = neuron.activationOutput;
-                    var expectedActivation = neuron.expectedActivationOutput;
-                    var derivativeInput = Sigmoid.Derivative(neuron.inputValue);
-                    var previousActivation = connection.input.activationOutput;
-
-                    var delta = 2 * (expectedActivation - currentActivation);
-                    delta *= derivativeInput;
-                    neuron.bias += learning_rate * delta;
-
-                    var deltaWeight = delta * previousActivation;
-                    connection.weight += learning_rate * deltaWeight;
-                }
+            var errors = GetErrors(pair.output.ToArray());
+            return GeMeanSquaredError(errors);
         }
 
-        public double ComputeError(double[] inputs, double[] expectedOutputs)
+        private double[] GetErrors(double[] expectedOutputs)
         {
-            ForwardPass(inputs);
-            GetErrors(expectedOutputs);
-            GetOutputLayerError();
-            return outputLayer.meanSquaredError;
-        }
-
-        private void GetErrors(double[] expectedOutputs)
-        {
+            double[] errors = new double[expectedOutputs.Length];
             for (var i = 0; i < expectedOutputs.Length; i++)
             {
                 var expectedOutput = expectedOutputs[i];
                 var outputNeuron = outputLayer.neurons[i];
-                var outputValue = outputNeuron.activationOutput;
-                var error = outputValue - expectedOutput;
-                outputNeuron.error = error;
+                var outputValue = outputNeuron.outputA;
+                errors[i] = expectedOutput - outputValue;
             }
+
+            return errors;
         }
 
-        public void GetOutputLayerError()
+        private double GeMeanSquaredError(double[] errors)
         {
-            outputLayer.meanSquaredError = 0;
+            var meanSquaredError = 0.0;
+            foreach (var error in errors)
+                meanSquaredError += error * error;
+            meanSquaredError /= errors.Length;
+            return meanSquaredError;
+        }
+
+        public override string ToString()
+        {
+            var output = "Input Layer\n";
+            output += "  Neurons\n";
+            foreach (var neuron in inputLayer.neurons)
+                output += $"    {neuron.ToStringWithValues()}\n";
+            output += "  Connections\n";
+            foreach (var neuron in inputLayer.neurons)
+            foreach (var connection in neuron.outputs)
+                output += $"    {connection}\n";
+
+            for (var i = 0; i < hiddenLayers.Count; i++)
+            {
+                output += $"Hidden Layer {i}\n";
+                output += "  Neurons\n";
+                foreach (var neuron in hiddenLayers[i].neurons)
+                    output += $"    {neuron.ToStringWithValues()}\n";
+                output += "  Connections\n";
+                foreach (var neuron in hiddenLayers[i].neurons)
+                foreach (var connection in neuron.outputs)
+                    output += $"    {connection}\n";
+            }
+
+            output += $"Output Layer\n";
+            output += "  Neurons\n";
             foreach (var neuron in outputLayer.neurons)
-                outputLayer.meanSquaredError += neuron.error * neuron.error;
-            outputLayer.meanSquaredError /= outputLayer.neurons.Count;
+                output += $"    {neuron.ToStringWithValues()}\n";
+            output += "  Connections\n";
+            foreach (var neuron in outputLayer.neurons)
+            foreach (var connection in neuron.outputs)
+                output += $"    {connection}\n";
+
+            return output;
         }
     }
 }
