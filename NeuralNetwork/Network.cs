@@ -52,10 +52,10 @@ namespace NeuralNetwork
             foreach (var connection in connections)
                 connection.weight = random.NextDouble();
 
-            // inputLayer.bias = random.NextDouble();
-            // foreach (var layer in hiddenLayers)
-            //     layer.bias = random.NextDouble();
-            // outputLayer.bias = random.NextDouble();
+            inputLayer.bias = random.NextDouble();
+            foreach (var layer in hiddenLayers)
+                layer.bias = random.NextDouble();
+            outputLayer.bias = random.NextDouble();
         }
 
         private void FullyConnect(Layer a, Layer b)
@@ -143,7 +143,8 @@ namespace NeuralNetwork
                 var neuron = outputLayer.neurons[i];
                 var outputA = neuron.outputA;
                 var expectedOutput = output[i];
-                neuron.costCorrection = 2 * (outputA - expectedOutput);
+                var dCdA = 2 * (outputA - expectedOutput);
+                neuron.costCorrection = dCdA;
             }
 
             for (var layer = outputLayer.previous; layer != inputLayer; layer = layer.previous)
@@ -153,26 +154,30 @@ namespace NeuralNetwork
                     neuron.costCorrection = 0;
                     foreach (var connection in neuron.outputs)
                     {
-                        var correction = connection.output.costCorrection;
-                        correction *= Sigmoid.Derivative(connection.output.outputA);
-                        correction *= connection.weight;
-                        neuron.costCorrection += correction;
+                        var dCdA = connection.output.costCorrection;
+                        var dAdZ = Sigmoid.Derivative(connection.output.outputA);
+                        var dZdW = connection.weight;
+                        neuron.costCorrection += dCdA * dAdZ * dZdW;
                     }
                 }
             }
 
             foreach (var connection in connections)
             {
-                var correction = connection.output.costCorrection;
-                correction *= Sigmoid.Derivative(connection.output.outputA);
-                correction *= connection.input.outputA;
-                correction *= learning_rate;
-                connection.weight += correction;
+                var dCdA = connection.output.costCorrection;
+                var dAdZ = Sigmoid.Derivative(connection.output.outputA);
+                var dZdA = connection.input.outputA;
+                connection.weight += dCdA * dAdZ * dZdA * learning_rate;
             }
 
-            // foreach(var hiddenLayer in hiddenLayers)
-            // foreach (var neuron in hiddenLayer.neurons)
-            //     hiddenLayer.bias += neuron.biasCorrection * learning_rate;
+            foreach(var hiddenLayer in hiddenLayers)
+            foreach (var neuron in hiddenLayer.neurons)
+            {
+                var dCdA = neuron.costCorrection;
+                var dAdZ = Sigmoid.Derivative(neuron.outputA);
+                var dZdB = 1;
+                hiddenLayer.bias += dCdA * dAdZ * dZdB * learning_rate;
+            }
         }
 
         public double ComputeError(Pair pair)
@@ -206,7 +211,7 @@ namespace NeuralNetwork
 
         public override string ToString()
         {
-            var output = "Input Layer\n";
+            var output = $"Input Layer b: {inputLayer.bias}\n";
             output += "  Neurons\n";
             foreach (var neuron in inputLayer.neurons)
                 output += $"    {neuron.ToStringWithValues()}\n";
@@ -217,7 +222,7 @@ namespace NeuralNetwork
 
             for (var i = 0; i < hiddenLayers.Count; i++)
             {
-                output += $"Hidden Layer {i}\n";
+                output += $"Hidden Layer {i} b: {hiddenLayers[i].bias}\n";
                 output += "  Neurons\n";
                 foreach (var neuron in hiddenLayers[i].neurons)
                     output += $"    {neuron.ToStringWithValues()}\n";
@@ -227,7 +232,7 @@ namespace NeuralNetwork
                     output += $"    {connection}\n";
             }
 
-            output += $"Output Layer\n";
+            output += $"Output Layer b: {outputLayer.bias}\n";
             output += "  Neurons\n";
             foreach (var neuron in outputLayer.neurons)
                 output += $"    {neuron.ToStringWithValues()}\n";
