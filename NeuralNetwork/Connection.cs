@@ -4,6 +4,7 @@
         public Neuron input;
         public Neuron output;
         public double weight;
+        public double costCorrection;
 
         public Connection(Neuron input, Neuron output)
         {

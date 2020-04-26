@@ -95,42 +95,6 @@ namespace NeuralNetwork
                 }
         }
 
-        // public void BackPropagate(Batch batch)
-        // {
-        //     var learning_rate = 0.1;
-        //     for (var layer = outputLayer; layer.previous != null; layer = layer.previous)
-        //         foreach (var neuron in layer.neurons)
-        //         foreach (var connection in neuron.inputs)
-        //         {
-        //             var deltaBiasSum = 0.0;
-        //             var deltaWeightSum = 0.0;
-        //             foreach (var pair in batch)
-        //             {
-        //                 ForwardPass(pair.input.ToArray());
-        //                 for (var i = 0; i < pair.output.Count; i++)
-        //                     outputLayer.neurons[i].expectedActivationOutput = pair.output[i];
-        //
-        //                 // dLoss/dWeight = (dLoss/dCurrentActivation)(dCurrentActivation/dCurrentInput)(dCurrentInput/dWeight)
-        //                 // dLoss/dWeight = 2(a-y)(g'(z))(prevA)
-        //                 var currentActivation = neuron.outputA;
-        //                 var expectedActivation = neuron.expectedActivationOutput;
-        //                 var derivativeInput = Sigmoid.Derivative(neuron.inputZ);
-        //                 var previousActivation = connection.input.outputA;
-        //
-        //                 var delta = 2 * (currentActivation - expectedActivation);
-        //                 delta *= derivativeInput;
-        //
-        //                 deltaBiasSum += delta;
-        //
-        //                 delta *= previousActivation;
-        //                 deltaWeightSum += delta;
-        //             }
-        //
-        //             neuron.bias += learning_rate * deltaBiasSum / batch.Count;
-        //             connection.weight += learning_rate * deltaWeightSum / batch.Count;
-        //         }
-        // }
-
         public void BackPropagate(Pair pair)
         {
             var input = pair.input.ToArray();
@@ -138,7 +102,7 @@ namespace NeuralNetwork
             var learning_rate = 0.1;
 
             ForwardPass(input);
-            
+
             for (var i = 0; i < outputLayer.neurons.Count; i++)
             {
                 var neuron = outputLayer.neurons[i];
@@ -172,14 +136,72 @@ namespace NeuralNetwork
                 connection.weight += dCdA * dAdZ * dZdA;
             }
 
-            for(var layer= inputLayer; layer != null; layer = layer.next)
-            foreach (var neuron in layer.neurons)
+            for (var layer = inputLayer; layer != null; layer = layer.next)
+                foreach (var neuron in layer.neurons)
+                {
+                    var dCdA = neuron.costCorrection;
+                    var dAdZ = Sigmoid.Derivative(neuron.outputA);
+                    var dZdB = 1;
+                    layer.bias += dCdA * dAdZ * dZdB;
+                }
+        }
+
+        public void BackPropagate(Batch batch)
+        {
+            var learning_rate = 0.1;
+            foreach (var neuron in neurons)
+                neuron.costCorrection = 0;
+
+            foreach (var connection in connections)
+                connection.costCorrection = 0;
+
+            foreach (var pair in batch)
             {
-                var dCdA = neuron.costCorrection;
-                var dAdZ = Sigmoid.Derivative(neuron.outputA);
-                var dZdB = 1;
-                layer.bias += dCdA * dAdZ * dZdB;
+                var input = pair.input.ToArray();
+                var output = pair.output.ToArray();
+
+                ForwardPass(input);
+
+                for (var i = 0; i < outputLayer.neurons.Count; i++)
+                {
+                    var neuron = outputLayer.neurons[i];
+                    var outputA = neuron.outputA;
+                    var expectedOutput = output[i];
+                    var error = expectedOutput - outputA;
+                    var dCdA = 2 * error;
+                    neuron.costCorrection += dCdA / batch.Count;
+                }
+
+                for (var layer = outputLayer.previous; layer != null; layer = layer.previous)
+                {
+                    foreach (var neuron in layer.neurons)
+                    {
+                        foreach (var connection in neuron.outputs)
+                        {
+                            var dCdA = connection.output.costCorrection;
+                            var dAdZ = Sigmoid.Derivative(connection.output.outputA);
+                            var dZdA = connection.weight;
+                            var dZdW = connection.input.outputA;
+                            neuron.costCorrection += dCdA * dAdZ * dZdA / batch.Count;
+                            connection.costCorrection += dCdA * dAdZ * dZdW / batch.Count;
+                        }
+                    }
+                }
             }
+
+            foreach (var connection in connections)
+            {
+                connection.weight += connection.costCorrection * learning_rate;
+            }
+
+            for (var layer = inputLayer; layer != null; layer = layer.next)
+                foreach (var neuron in layer.neurons)
+                {
+                    var dCdA = neuron.costCorrection;
+                    var dAdZ = Sigmoid.Derivative(neuron.outputA);
+                    var dZdB = 1;
+                    layer.bias += dCdA * dAdZ * dZdB * learning_rate;
+                }
         }
 
         public double ComputeError(Pair pair)

@@ -41,9 +41,9 @@ namespace ConsoleApplication1
 
             for (int i = 0; i < 10000; i++)
             {
-                randomIndex = 0;//random.Next(4);
+                randomIndex = random.Next(4);
                 var pair = inputOutputPairs[randomIndex];
-                neuralNetwork.BackPropagate(pair);
+                neuralNetwork.BackPropagate(inputOutputPairs);
                 var outputNeuron = neuralNetwork.outputLayer.neurons[0];
                 mse = neuralNetwork.ComputeError(pair);
                 Console.WriteLine(
