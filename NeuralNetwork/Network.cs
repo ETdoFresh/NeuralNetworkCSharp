@@ -87,6 +87,7 @@ namespace NeuralNetwork
             for (var layer = inputLayer.next; layer != null; layer = layer.next)
                 foreach (var neuron in layer.neurons)
                 {
+                    neuron.inputZ = 0;
                     foreach (var connection in neuron.inputs)
                         neuron.inputZ += connection.input.outputA * connection.weight;
 
@@ -143,11 +144,12 @@ namespace NeuralNetwork
                 var neuron = outputLayer.neurons[i];
                 var outputA = neuron.outputA;
                 var expectedOutput = output[i];
-                var dCdA = 2 * (outputA - expectedOutput);
+                var error = expectedOutput - outputA;
+                var dCdA = 2 * error;
                 neuron.costCorrection = dCdA;
             }
 
-            for (var layer = outputLayer.previous; layer != inputLayer; layer = layer.previous)
+            for (var layer = outputLayer.previous; layer != null; layer = layer.previous)
             {
                 foreach (var neuron in layer.neurons)
                 {
@@ -167,16 +169,16 @@ namespace NeuralNetwork
                 var dCdA = connection.output.costCorrection;
                 var dAdZ = Sigmoid.Derivative(connection.output.outputA);
                 var dZdA = connection.input.outputA;
-                connection.weight += dCdA * dAdZ * dZdA * learning_rate;
+                connection.weight += dCdA * dAdZ * dZdA;
             }
 
-            foreach(var hiddenLayer in hiddenLayers)
-            foreach (var neuron in hiddenLayer.neurons)
+            for(var layer= inputLayer; layer != null; layer = layer.next)
+            foreach (var neuron in layer.neurons)
             {
                 var dCdA = neuron.costCorrection;
                 var dAdZ = Sigmoid.Derivative(neuron.outputA);
                 var dZdB = 1;
-                hiddenLayer.bias += dCdA * dAdZ * dZdB * learning_rate;
+                layer.bias += dCdA * dAdZ * dZdB;
             }
         }
 
