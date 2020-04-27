@@ -22,7 +22,6 @@ namespace ConsoleApplication1
         public static void Main(string[] args)
         {
             // Create Neural Network
-            var learningRate = 0.1;
             var inputLayerNeurons = 2;
             var hiddenLayerNeurons = 2;
             var outputLayerNeurons = 1;
@@ -35,19 +34,15 @@ namespace ConsoleApplication1
                 new Pair(new Input(1, 1), new Output(0))
             );
 
-            var randomIndex = random.Next(4);
-            var mse = neuralNetwork.ComputeError(inputOutputPairs[randomIndex]);
-            Console.WriteLine($"Starting Mean Squared Error: {mse}");
-
-            for (int i = 0; i < 10000; i++)
+            for (var i = 0; i < 10000; i++)
             {
-                randomIndex = random.Next(4);
+                var randomIndex = random.Next(4);
                 var pair = inputOutputPairs[randomIndex];
-                neuralNetwork.BackPropagate(inputOutputPairs);
+                neuralNetwork.BackPropagate(pair);
                 var outputNeuron = neuralNetwork.outputLayer.neurons[0];
-                mse = neuralNetwork.ComputeError(pair);
+                var error = Math.Abs(outputNeuron.outputA - pair.output[0]);
                 Console.WriteLine(
-                    $"Run #{i}: input: {pair.input[0]} {pair.input[1]} output: {outputNeuron.outputA} error: {mse}");
+                    $"Run #{i}: input: {pair.input[0]} {pair.input[1]} output: {outputNeuron.outputA} error: {error}");
             }
         }
     }

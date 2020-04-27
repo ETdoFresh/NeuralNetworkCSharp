@@ -7,8 +7,9 @@ namespace NeuralNetwork {
 
         public int id;
         public double inputZ;
+        public double bias;
         public double outputA;
-        public double costCorrection;
+        public double error;
         public List<Connection> inputs = new List<Connection>();
         public List<Connection> outputs = new List<Connection>();
 
@@ -19,6 +20,6 @@ namespace NeuralNetwork {
         
         public override string ToString() => $"Neuron {id}";
 
-        public string ToStringWithValues() => $"{this} z: {inputZ} a: {outputA}";
+        public string ToStringWithValues() => $"{this} z: {inputZ} b: {bias} a: {outputA}";
     }
 }
