@@ -14,7 +14,7 @@ namespace NeuralNetwork
         {
             for (var i = 1; i < neuronCounts.Length; i++)
                 weights.Add(new Matrix(neuronCounts[i], neuronCounts[i - 1]));
-            
+
             for (var i = 1; i < neuronCounts.Length; i++)
                 biases.Add(new Matrix(neuronCounts[i], 1));
 
@@ -24,49 +24,54 @@ namespace NeuralNetwork
             foreach (var bias in biases)
                 bias.Randomize();
         }
-        
-        public double[] ForwardPass(double[] inputs)
+
+        public double[] Predict(double[] inputs) => Predict(new Matrix(inputs));
+
+        public double[] Predict(Matrix inputs)
         {
-            var layer = new Matrix(inputs);
-            outputAs.Add(new Matrix(inputs));
+            var layer = inputs;
+            outputAs.Clear();
+            outputAs.Add(inputs);
             for (var i = 0; i < weights.Count; i++)
             {
-                layer = weights[i].Multiply(layer);
+                layer = Matrix.Multiply(weights[i], layer);
                 layer.Add(biases[i]);
                 layer.Map(Sigmoid.Value);
                 outputAs.Add(layer);
             }
+
             return layer.ToArray();
         }
 
         public void BackPropagate(Pair pair)
         {
-            var inputs = pair.input.ToArray();
-            var expectedOutputs = new Matrix(pair.output.ToArray());
-            var outputs = new Matrix(ForwardPass(inputs));
-            var outputErrors = Matrix.Subtract(expectedOutputs, outputs);
-            
-            var gradients = Matrix.Map(outputs, Sigmoid.Derivative);
-            gradients.MultiplyElementWise(outputErrors);
-            gradients.Multiply(learning_rate);
+            var inputs = new Matrix(pair.input.ToArray());
 
-            var hidden = outputAs[1];
-            var hiddenT = hidden.Transpose();
-            var w1Deltas = Matrix.Multiply(gradients, hiddenT);
+            Predict(inputs);
 
-            biases[1].Add(gradients);
-            weights[1].Add(w1Deltas);
+            Matrix outputErrors = null;
+            for (var i = outputAs.Count - 1; i > 0; i--)
+            {
+                var outputs = outputAs[i];
+                if (i == outputAs.Count - 1)
+                {
+                    var targets = new Matrix(pair.output.ToArray());
+                    outputErrors = Matrix.Subtract(targets, outputs);
+                }
+                else
+                {
+                    var weightT = Matrix.Transpose(weights[i]);
+                    outputErrors = Matrix.Multiply(weightT, outputErrors);
+                }
 
-            var w1T = weights[1].Transpose();
-            var hiddenErrors = w1T.Multiply(outputErrors);
-            var hiddenGradient = Matrix.Map(hidden, Sigmoid.Derivative);
-            hiddenGradient.MultiplyElementWise(hiddenErrors);
-            hiddenGradient.Multiply(learning_rate);
-            var inputT = new Matrix(inputs).Transpose();
-            var w0Deltas = hiddenGradient.Multiply(inputT);
-
-            biases[0].Add(hiddenGradient);
-            weights[0].Add(w0Deltas);
+                var gradients = Matrix.Map(outputs, Sigmoid.Derivative);
+                gradients.Multiply(outputErrors);
+                gradients.Multiply(learning_rate);
+                var previousOutputsT = Matrix.Transpose(outputAs[i - 1]);
+                var weightDeltas = Matrix.Multiply(gradients, previousOutputsT);
+                weights[i - 1].Add(weightDeltas);
+                biases[i - 1].Add(gradients);
+            }
         }
 
         public override string ToString()

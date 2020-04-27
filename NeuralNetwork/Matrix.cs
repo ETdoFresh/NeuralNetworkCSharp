@@ -35,7 +35,7 @@ namespace NeuralNetwork
             columns = 1;
             this.data = new double[rows, columns];
             for (var row = 0; row < rows; row++)
-                this.data[row, 0] = data[row];
+                this[row, 0] = data[row];
         }
 
         public Matrix(double[][] data)
@@ -45,7 +45,7 @@ namespace NeuralNetwork
             this.data = new double[rows, columns];
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                this.data[row, column] = data[row][column];
+                this[row, column] = data[row][column];
         }
 
         public Matrix(double[,] data)
@@ -55,7 +55,7 @@ namespace NeuralNetwork
             this.data = new double[rows, columns];
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                this.data[row, column] = data[row, column];
+                this[row, column] = data[row, column];
         }
 
         public Matrix(Matrix matrix)
@@ -65,7 +65,7 @@ namespace NeuralNetwork
             data = new double[rows, columns];
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                data[row, column] = matrix[row, column];
+                this[row, column] = matrix[row, column];
         }
 
         public Matrix Clone() => new Matrix(this);
@@ -81,7 +81,7 @@ namespace NeuralNetwork
         {
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                data[row, column] += scalar;
+                this[row, column] += scalar;
             return this;
         }
         
@@ -89,7 +89,7 @@ namespace NeuralNetwork
         {
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                data[row, column] -= scalar;
+                this[row, column] -= scalar;
             return this;
         }
 
@@ -97,63 +97,41 @@ namespace NeuralNetwork
         {
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                data[row, column] = Random.NextDouble() * 2 - 1;
+                this[row, column] = Random.NextDouble() * 2 - 1;
             return this;
         }
 
-        public Matrix Add(Matrix rhs)
+        public Matrix Add(Matrix other)
         {
-            if (!IsSameSize(this, rhs))
+            if (!IsSameSize(this, other))
                 throw new ArgumentException("Trying to add two matrices of different sizes");
 
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                data[row, column] += rhs[row, column];
+                this[row, column] += other[row, column];
             return this;
         }
         
-        public Matrix Subtract(Matrix rhs)
+        public Matrix Subtract(Matrix other)
         {
-            if (!IsSameSize(this, rhs))
+            if (!IsSameSize(this, other))
                 throw new ArgumentException("Trying to add two matrices of different sizes");
 
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                data[row, column] -= rhs[row, column];
+                data[row, column] -= other[row, column];
             return this;
         }
 
-        public Matrix MultiplyElementWise(Matrix rhs)
+        public Matrix Multiply(Matrix other)
         {
-            if (!IsSameSize(this, rhs))
+            if (!IsSameSize(this, other))
                 throw new ArgumentException("Trying to add two matrices of different sizes");
 
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                data[row, column] *= rhs[row, column];
+                data[row, column] *= other[row, column];
             return this;
-        }
-
-        public Matrix Multiply(Matrix rhs)
-        {
-            if (this.columns != rhs.rows)
-                throw new ArgumentException("Incompatible matrix sizes for Matrix Product");
-
-            var result = new Matrix(this.rows, rhs.columns);
-            for (var row = 0; row < result.rows; row++)
-            for (var column = 0; column < result.columns; column++)
-            for (var i = 0; i < this.columns; i++)
-                result[row, column] += this[row, i] * rhs[i, column];
-            return result;
-        }
-
-        public Matrix Transpose()
-        {
-            var result = new Matrix(columns, rows);
-            for (var row = 0; row < rows; row++)
-            for (var column = 0; column < columns; column++)
-                result[column, row] = this[row, column];
-            return result;
         }
 
         public Matrix Map(Func<double, double> mapFunction)
@@ -165,12 +143,33 @@ namespace NeuralNetwork
         }
 
         public static Matrix Add(Matrix matrix, double scalar) => matrix.Clone().Add(scalar);
-        public static Matrix Add(Matrix lhs, Matrix rhs) => lhs.Clone().Add(rhs);
+        public static Matrix Add(Matrix a, Matrix b) => a.Clone().Add(b);
         public static Matrix Subtract(Matrix matrix, double scalar) => matrix.Clone().Subtract(scalar);
-        public static Matrix Subtract(Matrix lhs, Matrix rhs) => lhs.Clone().Subtract(rhs);
+        public static Matrix Subtract(Matrix a, Matrix b) => a.Clone().Subtract(b);
         public static Matrix Multiply(Matrix matrix, double scalar) => matrix.Clone().Multiply(scalar);
-        public static Matrix Multiply(Matrix lhs, Matrix rhs) => lhs.Multiply(rhs);
         public static Matrix Map(Matrix matrix, Func<double, double> mapFunction) => matrix.Clone().Map(mapFunction);
+        
+        public static Matrix Multiply(Matrix a, Matrix b)
+        {
+            if (a.columns != b.rows)
+                throw new ArgumentException("Incompatible matrix sizes for Matrix Product");
+
+            var result = new Matrix(a.rows, b.columns);
+            for (var row = 0; row < result.rows; row++)
+            for (var column = 0; column < result.columns; column++)
+            for (var i = 0; i < a.columns; i++)
+                result[row, column] += a[row, i] * b[i, column];
+            return result;
+        }
+
+        public static Matrix Transpose(Matrix matrix)
+        {
+            var result = new Matrix(matrix.columns, matrix.rows);
+            for (var row = 0; row < matrix.rows; row++)
+            for (var column = 0; column < matrix.columns; column++)
+                result[column, row] = matrix[row, column];
+            return result;
+        }
 
         public double[] ToArray()
         {
@@ -180,9 +179,9 @@ namespace NeuralNetwork
             return arr;
         }
         
-        public static bool IsSameSize(Matrix matrix1, Matrix matrix2)
+        public static bool IsSameSize(Matrix a, Matrix b)
         {
-            return matrix1.rows == matrix2.rows && matrix1.columns == matrix2.columns;
+            return a.rows == b.rows && a.columns == b.columns;
         }
 
         public override string ToString()

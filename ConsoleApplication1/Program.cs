@@ -23,10 +23,11 @@ namespace ConsoleApplication1
         {
             // Create Neural Network
             var inputLayerNeurons = 2;
-            var hiddenLayerNeurons = 2;
+            var hiddenLayerNeurons = 4;
             var outputLayerNeurons = 1;
             var neuralNetwork = new NetworkUsingMatrices(inputLayerNeurons, hiddenLayerNeurons, outputLayerNeurons);
-
+            neuralNetwork.learning_rate = 0.1;
+            
             var inputOutputPairs = new Batch(
                 new Pair(new Input(0, 0), new Output(0)),
                 new Pair(new Input(0, 1), new Output(1)),
@@ -37,25 +38,25 @@ namespace ConsoleApplication1
             {
                 var randomIndex = random.Next(4);
                 var pair = inputOutputPairs[randomIndex];
-                var output = neuralNetwork.ForwardPass(pair.input.ToArray());
+                var output = neuralNetwork.Predict(pair.input.ToArray());
                 var error = Math.Abs(output[0] - pair.output[0]);
                 Console.WriteLine(
                     $"Initial: {pair.input[0]} {pair.input[1]} output: {output[0]} error: {error}");
             }
 
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < 50000; i++)
             {
                 var randomIndex = random.Next(4);
                 var pair = inputOutputPairs[randomIndex];
                 neuralNetwork.BackPropagate(pair);
-
-                foreach (var p in inputOutputPairs)
-                {
-                    var output = neuralNetwork.ForwardPass(p.input.ToArray());
-                    var error = Math.Abs(output[0] - p.output[0]);
-                    Console.WriteLine(
-                        $"Run #{i}: {p.input[0]} {p.input[1]} output: {output[0]} error: {error}");
-                }
+                if (i % 100 == 0)
+                    foreach (var p in inputOutputPairs)
+                    {
+                        var output = neuralNetwork.Predict(p.input.ToArray());
+                        var error = Math.Abs(output[0] - p.output[0]);
+                        Console.WriteLine(
+                            $"Run #{i}: {p.input[0]} {p.input[1]} output: {output[0]} error: {error}");
+                    }
             }
 
             // for (var i = 0; i < 100; i++)
