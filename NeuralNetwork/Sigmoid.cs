@@ -5,7 +5,7 @@ namespace NeuralNetwork {
     {
         public static double Value(double x)
         {
-            return 1 / (1 + Math.Pow(Math.E, -x));
+            return 1 / (1 + Math.Exp(-x));
         }
 
         public static double Derivative(double sigmoid)

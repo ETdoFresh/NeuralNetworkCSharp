@@ -42,7 +42,9 @@
         <Compile Include="Connection.cs" />
         <Compile Include="Input.cs" />
         <Compile Include="Layer.cs" />
+        <Compile Include="Matrix.cs" />
         <Compile Include="Network.cs" />
+        <Compile Include="NetworkUsingMatrices.cs" />
         <Compile Include="Neuron.cs" />
         <Compile Include="Output.cs" />
         <Compile Include="Pair.cs" />

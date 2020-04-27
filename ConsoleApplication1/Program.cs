@@ -25,7 +25,7 @@ namespace ConsoleApplication1
             var inputLayerNeurons = 2;
             var hiddenLayerNeurons = 2;
             var outputLayerNeurons = 1;
-            var neuralNetwork = new Network(inputLayerNeurons, hiddenLayerNeurons, outputLayerNeurons);
+            var neuralNetwork = new NetworkUsingMatrices(inputLayerNeurons, hiddenLayerNeurons, outputLayerNeurons);
 
             var inputOutputPairs = new Batch(
                 new Pair(new Input(0, 0), new Output(0)),
@@ -34,16 +34,40 @@ namespace ConsoleApplication1
                 new Pair(new Input(1, 1), new Output(0))
             );
 
+            {
+                var randomIndex = random.Next(4);
+                var pair = inputOutputPairs[randomIndex];
+                var output = neuralNetwork.ForwardPass(pair.input.ToArray());
+                var error = Math.Abs(output[0] - pair.output[0]);
+                Console.WriteLine(
+                    $"Initial: {pair.input[0]} {pair.input[1]} output: {output[0]} error: {error}");
+            }
+
             for (var i = 0; i < 10000; i++)
             {
                 var randomIndex = random.Next(4);
                 var pair = inputOutputPairs[randomIndex];
                 neuralNetwork.BackPropagate(pair);
-                var outputNeuron = neuralNetwork.outputLayer.neurons[0];
-                var error = Math.Abs(outputNeuron.outputA - pair.output[0]);
-                Console.WriteLine(
-                    $"Run #{i}: input: {pair.input[0]} {pair.input[1]} output: {outputNeuron.outputA} error: {error}");
+
+                foreach (var p in inputOutputPairs)
+                {
+                    var output = neuralNetwork.ForwardPass(p.input.ToArray());
+                    var error = Math.Abs(output[0] - p.output[0]);
+                    Console.WriteLine(
+                        $"Run #{i}: {p.input[0]} {p.input[1]} output: {output[0]} error: {error}");
+                }
             }
+
+            // for (var i = 0; i < 100; i++)
+            // {
+            //     var randomIndex = random.Next(4);
+            //     var pair = inputOutputPairs[randomIndex];
+            //     neuralNetwork.BackPropagate(pair);
+            //     var outputNeuron = neuralNetwork.outputLayer.neurons[0];
+            //     var error = Math.Abs(outputNeuron.outputA - pair.output[0]);
+            //     Console.WriteLine(
+            //         $"Run #{i}: input: {pair.input[0]} {pair.input[1]} output: {outputNeuron.outputA} error: {error}");
+            // }
         }
     }
 }
