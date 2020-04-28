@@ -49,16 +49,12 @@ namespace NeuralNetwork
 
             Predict(inputs);
 
-            Matrix outputErrors = null;
+            var targets = new Matrix(pair.output.ToArray());
+            Matrix outputErrors = Matrix.Subtract(targets, outputAs[outputAs.Count - 1]);
             for (var i = outputAs.Count - 1; i > 0; i--)
             {
                 var outputs = outputAs[i];
-                if (i == outputAs.Count - 1)
-                {
-                    var targets = new Matrix(pair.output.ToArray());
-                    outputErrors = Matrix.Subtract(targets, outputs);
-                }
-                else
+                if (i < outputAs.Count - 1)
                 {
                     var weightT = Matrix.Transpose(weights[i]);
                     outputErrors = Matrix.Multiply(weightT, outputErrors);
@@ -72,42 +68,6 @@ namespace NeuralNetwork
                 weights[i - 1].Add(weightDeltas);
                 biases[i - 1].Add(gradients);
             }
-        }
-
-        public override string ToString()
-        {
-            // var output = $"Input Layer\n";
-            // output += "  Neurons\n";
-            // foreach (var neuron in inputLayer.neurons)
-            //     output += $"    {neuron.ToStringWithValues()}\n";
-            // output += "  Connections\n";
-            // foreach (var neuron in inputLayer.neurons)
-            // foreach (var connection in neuron.outputs)
-            //     output += $"    {connection}\n";
-            //
-            // for (var i = 0; i < hiddenLayers.Count; i++)
-            // {
-            //     output += $"Hidden Layer {i}\n";
-            //     output += "  Neurons\n";
-            //     foreach (var neuron in hiddenLayers[i].neurons)
-            //         output += $"    {neuron.ToStringWithValues()}\n";
-            //     output += "  Connections\n";
-            //     foreach (var neuron in hiddenLayers[i].neurons)
-            //     foreach (var connection in neuron.outputs)
-            //         output += $"    {connection}\n";
-            // }
-            //
-            // output += $"Output Layer\n";
-            // output += "  Neurons\n";
-            // foreach (var neuron in outputLayer.neurons)
-            //     output += $"    {neuron.ToStringWithValues()}\n";
-            // output += "  Connections\n";
-            // foreach (var neuron in outputLayer.neurons)
-            // foreach (var connection in neuron.outputs)
-            //     output += $"    {connection}\n";
-            //
-            // return output;
-            return base.ToString();
         }
     }
 }
