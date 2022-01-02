@@ -40,6 +40,7 @@
     <ItemGroup>
         <Compile Include="Batch.cs" />
         <Compile Include="Connection.cs" />
+        <Compile Include="ArrayClass.cs" />
         <Compile Include="Input.cs" />
         <Compile Include="Layer.cs" />
         <Compile Include="Matrix.cs" />
@@ -49,6 +50,7 @@
         <Compile Include="Output.cs" />
         <Compile Include="Pair.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="Random.cs" />
         <Compile Include="Sigmoid.cs" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

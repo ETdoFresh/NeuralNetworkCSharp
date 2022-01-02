@@ -1,33 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace NeuralNetwork
 {
     public class Batch : List<Pair>
     {
-        private static readonly Random random = new Random();
-
-        public Batch(params Pair[] pairs) : this((IEnumerable<Pair>)pairs) { }
-
-        public Batch(IEnumerable<Pair> pairs) => AddRange(pairs);
-
-        public Batch Clone()
+        public Batch Input(params double[] inputValues)
         {
-            return new Batch(this);
+            var input = new Input(inputValues);
+            var pair = new Pair(input, new Output());
+            Add(pair);
+            return this;
         }
 
-        public Batch Randomize()
+        public Batch Output(params double[] outputValues)
         {
-            var clone = Clone();
-            for (var i = Count - 1; i > 0; i--)
-            {
-                var k = random.Next(i + 1);
-                var swapValue = this[k];
-                clone[k] = clone[i];
-                clone[i] = swapValue;
-            }
-
-            return clone;
+            var output = new Output(outputValues);
+            var pair = Count > 0 ? this[Count - 1] : new Pair(null, null);
+            pair.output = output;
+            if (Count == 0) Add(pair);
+            return this;
         }
     }
 }

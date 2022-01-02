@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using NeuralNetwork;
+﻿using NeuralNetwork;
 
 namespace ConsoleApplication1
 {
@@ -15,60 +13,39 @@ namespace ConsoleApplication1
     // Input1-Hidden1, Input1-Hidden2, Input2-Hidden1, Input2-Hidden2
     // Hidden1-Output1, Hidden2-Output1
 
-    public class Program
+    public static class Program
     {
-        private static Random random = new Random();
-
         public static void Main(string[] args)
         {
-            // Create Neural Network
-            var inputLayerNeurons = 2;
-            var hiddenLayerNeurons = 4;
-            var outputLayerNeurons = 1;
-            var neuralNetwork = new NetworkUsingMatrices(inputLayerNeurons, hiddenLayerNeurons, outputLayerNeurons);
-            neuralNetwork.learning_rate = 0.1;
-            
-            var inputOutputPairs = new Batch(
-                new Pair(new Input(0, 0), new Output(0)),
-                new Pair(new Input(0, 1), new Output(1)),
-                new Pair(new Input(1, 0), new Output(1)),
-                new Pair(new Input(1, 1), new Output(0))
-            );
+            SetupXorProblem(out var neuralNetwork, out var expectedResults);
+            //SetupEchoProblem(out var neuralNetwork, out var expectedResults);
+            neuralNetwork.PrintInitialError(expectedResults);
+            neuralNetwork.Train(expectedResults, 50000, 1000);
+        }
 
-            {
-                var randomIndex = random.Next(4);
-                var pair = inputOutputPairs[randomIndex];
-                var output = neuralNetwork.Predict(pair.input.ToArray());
-                var error = Math.Abs(output[0] - pair.output[0]);
-                Console.WriteLine(
-                    $"Initial: {pair.input[0]} {pair.input[1]} output: {output[0]} error: {error}");
-            }
+        private static void SetupXorProblem(out NetworkUsingMatrices neuralNetwork, out Batch expectedResults)
+        {
+            neuralNetwork = new NetworkUsingMatrices()
+                .CreateInputLayerNeurons(2)
+                .CreateHiddenLayerNeurons(4)
+                //.CreateHiddenLayerNeurons(4)
+                .CreateOutputLayerNeurons(1)
+                .SetLearningRate(0.1);
 
-            for (var i = 0; i < 50000; i++)
-            {
-                var randomIndex = random.Next(4);
-                var pair = inputOutputPairs[randomIndex];
-                neuralNetwork.BackPropagate(pair);
-                if (i % 100 == 0)
-                    foreach (var p in inputOutputPairs)
-                    {
-                        var output = neuralNetwork.Predict(p.input.ToArray());
-                        var error = Math.Abs(output[0] - p.output[0]);
-                        Console.WriteLine(
-                            $"Run #{i}: {p.input[0]} {p.input[1]} output: {output[0]} error: {error}");
-                    }
-            }
+            expectedResults = new Batch()
+                .Input(0, 0).Output(0)
+                .Input(0, 1).Output(1)
+                .Input(1, 0).Output(1)
+                .Input(1, 1).Output(0);
+        }
 
-            // for (var i = 0; i < 100; i++)
-            // {
-            //     var randomIndex = random.Next(4);
-            //     var pair = inputOutputPairs[randomIndex];
-            //     neuralNetwork.BackPropagate(pair);
-            //     var outputNeuron = neuralNetwork.outputLayer.neurons[0];
-            //     var error = Math.Abs(outputNeuron.outputA - pair.output[0]);
-            //     Console.WriteLine(
-            //         $"Run #{i}: input: {pair.input[0]} {pair.input[1]} output: {outputNeuron.outputA} error: {error}");
-            // }
+        private static void SetupEchoProblem(out NetworkUsingMatrices neuralNetwork, out Batch expectedResults)
+        {
+            neuralNetwork = new NetworkUsingMatrices()
+                .CreateInputLayerNeurons(1)
+                .CreateHiddenLayerNeurons(1)
+                .CreateOutputLayerNeurons(1);
+            expectedResults = new Batch().Input(0).Output(0).Input(1).Output(1);
         }
     }
 }

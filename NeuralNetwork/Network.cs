@@ -1,30 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NeuralNetwork
 {
     public class Network
     {
-        public static Random random = new Random();
-
         public Layer inputLayer;
         public List<Layer> hiddenLayers = new List<Layer>();
         public Layer outputLayer;
         public List<Neuron> neurons = new List<Neuron>();
         public List<Connection> connections = new List<Connection>();
-        public double learning_rate = 0.1;
+        private double _learningRate = 0.1;
 
-        public Network(params int[] neuronCounts)
+        public Network CreateInputLayerNeurons(int neuronCount)
         {
-            if (neuronCounts.Length < 2)
-                throw new ArgumentException("Not enough counts, need at least two for Input and Output layers");
+            inputLayer = new Layer(neuronCount);
+            return this;
+        }
 
-            // Create Layers
-            inputLayer = new Layer(neuronCounts[0]);
-            for (var i = 1; i < neuronCounts.Length - 1; i++)
-                hiddenLayers.Add(new Layer(neuronCounts[i]));
-            outputLayer = new Layer(neuronCounts[neuronCounts.Length - 1]);
+        public Network CreateHiddenLayerNeurons(int neuronCount)
+        {
+            hiddenLayers.Add(new Layer(neuronCount));
+            return this;
+        }
 
+        public Network CreateOutputLayerNeurons(int neuronCount)
+        {
+            outputLayer = new Layer(neuronCount);
+            FinishNeuronConnections();
+            return this;
+        }
+
+        public Network SetLearningRate(double learningRate)
+        {
+            _learningRate = learningRate;
+            return this;
+        }
+
+        private void FinishNeuronConnections()
+        {
             // Get All Neurons
             foreach (var neuron in inputLayer.neurons)
                 neurons.Add(neuron);
@@ -51,11 +66,11 @@ namespace NeuralNetwork
 
             // Randomize Weights and Biases
             foreach (var connection in connections)
-                connection.weight = random.NextDouble();
+                connection.weight = Random.Double();
 
             for (var layer = inputLayer; layer != null; layer = layer.next)
                 foreach (var neuron in layer.neurons)
-                    neuron.bias = random.NextDouble();
+                    neuron.bias = Random.Double();
         }
 
         private void FullyConnect(Layer a, Layer b)
@@ -72,15 +87,11 @@ namespace NeuralNetwork
             }
         }
 
-        public void SetInputs(double[] inputs)
+        public Output Predict(Input input)
         {
-            for (int i = 0; i < inputs.Length; i++)
-                inputLayer.neurons[i].inputZ = inputs[i];
-        }
+            for (var i = 0; i < input.Length; i++)
+                inputLayer.neurons[i].inputZ = input[i];
 
-        public void ForwardPass(double[] inputs)
-        {
-            SetInputs(inputs);
             foreach (var inputNeuron in inputLayer.neurons)
                 inputNeuron.outputA = Sigmoid.Value(inputNeuron.inputZ + inputNeuron.bias);
 
@@ -93,14 +104,16 @@ namespace NeuralNetwork
 
                     neuron.outputA = Sigmoid.Value(neuron.inputZ + neuron.bias);
                 }
+
+            return new Output(outputLayer.neurons.Select(x => x.outputA).ToArray());
         }
 
-        public void BackPropagate(Pair pair)
+        private void BackPropagate(Pair pair)
         {
-            var input = pair.input.ToArray();
-            var output = pair.output.ToArray();
+            var input = pair.input;
+            var output = pair.output;
 
-            ForwardPass(input);
+            Predict(input);
 
             for (var i = 0; i < outputLayer.neurons.Count; i++)
             {
@@ -129,7 +142,7 @@ namespace NeuralNetwork
                 var error = connection.output.error;
                 var gradient = Sigmoid.Derivative(connection.output.outputA);
                 var previousOutputA = connection.input.outputA;
-                connection.weight += learning_rate * error * gradient * previousOutputA;
+                connection.weight += _learningRate * error * gradient * previousOutputA;
             }
 
             for (var layer = inputLayer; layer != null; layer = layer.next)
@@ -137,95 +150,26 @@ namespace NeuralNetwork
                 {
                     var error = neuron.error;
                     var gradient = Sigmoid.Derivative(neuron.outputA);
-                    neuron.bias += learning_rate * error * gradient;
+                    neuron.bias += _learningRate * error * gradient;
                 }
         }
 
-        public void BackPropagate(Batch batch)
+        public void Train(Batch batch, int iterations, int printLineRate = 0)
         {
-            var learning_rate = 0.01;
-            foreach (var neuron in neurons)
-                neuron.error = 0;
-
-            foreach (var connection in connections)
-                connection.costCorrection = 0;
-
-            foreach (var pair in batch)
+            for (var i = 1; i <= iterations; i++)
             {
-                var input = pair.input.ToArray();
-                var output = pair.output.ToArray();
-
-                ForwardPass(input);
-
-                for (var i = 0; i < outputLayer.neurons.Count; i++)
+                var randomIndex = Random.Int(batch.Count);
+                var pair = batch[randomIndex];
+                BackPropagate(pair);
+                if (printLineRate <= 0) continue;
+                if (i % printLineRate != 0) continue;
+                foreach (var expected in batch)
                 {
-                    var neuron = outputLayer.neurons[i];
-                    var outputA = neuron.outputA;
-                    var expectedOutput = output[i];
-                    var error = expectedOutput - outputA;
-                    var dCdA = 2 * error;
-                    neuron.error += dCdA / batch.Count;
-                }
-
-                for (var layer = outputLayer.previous; layer != null; layer = layer.previous)
-                {
-                    foreach (var neuron in layer.neurons)
-                    {
-                        foreach (var connection in neuron.outputs)
-                        {
-                            var dCdA = connection.output.error;
-                            var dAdZ = Sigmoid.Derivative(connection.output.outputA);
-                            var dZdA = connection.weight;
-                            var dZdW = connection.input.outputA;
-                            neuron.error += dCdA * dAdZ * dZdA / batch.Count;
-                            connection.costCorrection += dCdA * dAdZ * dZdW / batch.Count;
-                        }
-                    }
+                    var predicted = Predict(expected.input);
+                    var error = Math.Abs(predicted[0] - expected.output[0]);
+                    Console.WriteLine($"Run #{i}: {expected.input} output: {predicted} error: {error}");
                 }
             }
-
-            foreach (var connection in connections)
-            {
-                connection.weight += connection.costCorrection * learning_rate;
-            }
-
-            for (var layer = inputLayer; layer != null; layer = layer.next)
-                foreach (var neuron in layer.neurons)
-                {
-                    var dCdA = neuron.error;
-                    var dAdZ = Sigmoid.Derivative(neuron.outputA);
-                    var dZdB = 1;
-                    neuron.bias += dCdA * dAdZ * dZdB * learning_rate;
-                }
-        }
-
-        public double ComputeError(Pair pair)
-        {
-            var errors = GetErrors(pair.output.ToArray());
-            return GeMeanSquaredError(errors);
-        }
-
-        private double[] GetErrors(double[] expectedOutputs)
-        {
-            double[] errors = new double[expectedOutputs.Length];
-            for (var i = 0; i < expectedOutputs.Length; i++)
-            {
-                var expectedOutput = expectedOutputs[i];
-                var outputNeuron = outputLayer.neurons[i];
-                var outputValue = outputNeuron.outputA;
-                errors[i] = expectedOutput - outputValue;
-            }
-
-            return errors;
-        }
-
-        private double GeMeanSquaredError(double[] errors)
-        {
-            var meanSquaredError = 0.0;
-            foreach (var error in errors)
-                meanSquaredError += error * error;
-            meanSquaredError /= errors.Length;
-            return meanSquaredError;
         }
 
         public override string ToString()
@@ -261,6 +205,15 @@ namespace NeuralNetwork
                 output += $"    {connection}\n";
 
             return output;
+        }
+
+        public void PrintInitialError(Batch batch)
+        {
+            var randomIndex = Random.Int(batch.Count);
+            var expected = batch[randomIndex];
+            var predictedOutput = Predict(expected.input);
+            var error = Math.Abs(predictedOutput[0] - expected.output[0]);
+            Console.WriteLine($"Initial: {expected.input} output: {predictedOutput} error: {error}");
         }
     }
 }

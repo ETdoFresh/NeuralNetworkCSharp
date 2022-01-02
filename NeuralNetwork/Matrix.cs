@@ -4,8 +4,6 @@ namespace NeuralNetwork
 {
     public class Matrix
     {
-        public static Random Random = new Random();
-
         public int rows;
         public int columns;
         public double[,] data;
@@ -97,7 +95,7 @@ namespace NeuralNetwork
         {
             for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
-                this[row, column] = Random.NextDouble() * 2 - 1;
+                this[row, column] = Random.Double() * 2 - 1;
             return this;
         }
 
