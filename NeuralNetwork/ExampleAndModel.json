@@ -1,0 +1,38 @@
+﻿{
+  "ModelType": "SequentialModel",
+  "LearningRate": 100000,
+  "TrainedEpochs": 20000000,
+  "Weights": [
+    {
+      "Rows": 1,
+      "Columns": 2,
+      "Values": [
+        -31.630493226721672,
+        -31.630492694129885
+      ]
+    },
+    {
+      "Rows": 1,
+      "Columns": 1,
+      "Values": [
+        -27.977603633691185
+      ]
+    }
+  ],
+  "Biases": [
+    {
+      "Rows": 1,
+      "Columns": 1,
+      "Values": [
+        47.23795612268292
+      ]
+    },
+    {
+      "Rows": 1,
+      "Columns": 1,
+      "Values": [
+        13.612782046259332
+      ]
+    }
+  ]
+}
