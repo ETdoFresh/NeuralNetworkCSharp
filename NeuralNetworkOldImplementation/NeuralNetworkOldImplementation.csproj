@@ -4,14 +4,13 @@
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{9612DD7D-FF47-4FE2-AC11-F90395061717}</ProjectGuid>
-        <OutputType>Exe</OutputType>
+        <ProjectGuid>{E7B8B0FF-670A-4A22-A009-271346F89C0B}</ProjectGuid>
+        <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>ConsoleApp1</RootNamespace>
-        <AssemblyName>ConsoleApp1</AssemblyName>
+        <RootNamespace>NeuralNetwork</RootNamespace>
+        <AssemblyName>NeuralNetworkOldImplementation</AssemblyName>
         <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
-        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <LangVersion>7.3</LangVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -40,16 +39,26 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Program.cs" />
+        <Compile Include="Activation.cs" />
+        <Compile Include="ArrayModels\Connection.cs" />
+        <Compile Include="ArrayModels\Layer.cs" />
+        <Compile Include="ArrayModels\Model.cs" />
+        <Compile Include="ArrayModels\Neuron.cs" />
+        <Compile Include="ArrayModels\SequentialModel.cs" />
+        <Compile Include="ArrayModels\TrainingData.cs" />
+        <Compile Include="JsonExtensions.cs" />
+        <Compile Include="MatrixModels\JsonModelConverter.cs" />
+        <Compile Include="MatrixModels\Matrix.cs" />
+        <Compile Include="MatrixModels\Model.cs" />
+        <Compile Include="MatrixModels\NetworkSolver.cs" />
+        <Compile Include="MatrixModels\NeuralNetwork.cs" />
+        <Compile Include="MatrixModels\SequentialModel.cs" />
+        <Compile Include="MatrixModels\TrainingData.cs" />
+        <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="Randomizer.cs" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\NeuralNetwork\NeuralNetwork.csproj">
-        <Project>{6e820e4d-654f-4c19-bd96-a444dd22832f}</Project>
-        <Name>NeuralNetwork</Name>
-      </ProjectReference>
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Properties\" />
+      <Content Include="ExampleAndModel.json" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

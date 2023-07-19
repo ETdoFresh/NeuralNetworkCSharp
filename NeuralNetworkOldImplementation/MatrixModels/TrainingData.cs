@@ -5,7 +5,7 @@ namespace NeuralNetwork.MatrixModels
 {
     public class TrainingData
     {
-        private Dictionary<Matrix, Matrix> pairs = new();
+        private Dictionary<Matrix, Matrix> pairs = new Dictionary<Matrix, Matrix>();
         public Matrix[] Inputs => pairs.Keys.ToArray();
         public Matrix[] Outputs => pairs.Values.ToArray();
         public IEnumerable<KeyValuePair<Matrix, Matrix>> Pairs => pairs;
@@ -22,8 +22,8 @@ namespace NeuralNetwork.MatrixModels
 
         public class TrainingSetInputsTuple
         {
-            public TrainingData TrainingData { get; init; } = new();
-            public Matrix Inputs { get; init; } = Matrix.Empty;
+            public TrainingData TrainingData { get; set; } = new TrainingData();
+            public Matrix Inputs { get; set; } = Matrix.Empty;
 
             public TrainingData Output(params double[] outputArray)
             {

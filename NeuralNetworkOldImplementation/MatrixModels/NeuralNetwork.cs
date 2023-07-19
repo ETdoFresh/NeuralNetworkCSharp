@@ -4,9 +4,9 @@ namespace NeuralNetwork.MatrixModels
 {
     public class NeuralNetwork
     {
-        private List<Matrix> activations = new();
-        private List<Matrix> weights = new();
-        private List<Matrix> biases = new();
+        private List<Matrix> activations = new List<Matrix>();
+        private List<Matrix> weights = new List<Matrix>();
+        private List<Matrix> biases = new List<Matrix>();
         private int _firstLayerCount = -1;
 
         public void AddLayer(int neuronCount)

@@ -8,7 +8,7 @@ namespace NeuralNetwork.ArrayModels
     public class Layer
     {
         public string LayerType { get; set; } = "Dense";
-        public List<Neuron> Neurons { get; set; } = new();
+        public List<Neuron> Neurons { get; set; } = new List<Neuron>();
 
         public Layer() { }
 

@@ -1,4 +1,4 @@
-﻿using NeuralNetwork.MatrixModels;
+﻿using NeuralNetwork;
 
 namespace ConsoleApp1
 {
@@ -10,11 +10,17 @@ namespace ConsoleApp1
 
         public static void Main(string[] args)
         {
+            RandomUtil.SetSeed(42);
+            Connection.SetRandomWeightRange(-1.00, 1.00);
+            Neuron.SetRandomBiasRange(-1.00, 1.00);
+            
             // Create a new neural network
             var model = AndModel;
-            model.PrintInitialError();
-            model.Train(Epochs, EpochDisplayInterval);
-            model.WriteToJson();
+            var trainingData = AndTrainingData;
+            
+            model.PrintInitialError(trainingData);
+            model.Train(Epochs, EpochDisplayInterval, trainingData);
+            //model.WriteToJson();
 
             // Read existing network and train more
             // var model = Model.ReadFromJson();
@@ -28,24 +34,22 @@ namespace ConsoleApp1
             // Console.WriteLine(model.Predict(new Matrix(new double[] {1, 1})));
         }
 
-        private static Model EchoModel => new SequentialModel()
+        private static Model EchoModel => new Model()
             .SetLearningRate(LearningRate)
-            .SetTrainingData(EchoTrainingData)
-            .AddInputLayer()
-            .AddLayer(1)
-            .AddOutputLayer();
+            .AddInputLayer(EchoTrainingData.InputShape)
+            .AddFullyConnectedLayer(1)
+            .AddFullyConnectedOutputLayer(EchoTrainingData.OutputShape);
 
         private static TrainingData EchoTrainingData => new TrainingData()
             .Input(0).Output(0)
             .Input(1).Output(1);
 
-        private static Model XOrModel => new SequentialModel()
+        private static Model XOrModel => new Model()
             .SetLearningRate(LearningRate)
-            .SetTrainingData(XOrTrainingData)
-            .AddInputLayer()
-            .AddLayer(4)
-            .AddLayer(4)
-            .AddOutputLayer();
+            .AddInputLayer(XOrTrainingData.InputShape)
+            .AddFullyConnectedLayer(4)
+            .AddFullyConnectedLayer(4)
+            .AddFullyConnectedOutputLayer(XOrTrainingData.OutputShape);
 
         private static TrainingData XOrTrainingData => new TrainingData()
             .Input(0, 0).Output(0)
@@ -53,13 +57,12 @@ namespace ConsoleApp1
             .Input(1, 0).Output(1)
             .Input(1, 1).Output(0);
 
-        private static Model AndModel => new SequentialModel()
+        private static Model AndModel => new Model()
             .SetLearningRate(LearningRate)
-            .SetTrainingData(AndTrainingData)
-            .AddInputLayer()
-            .AddLayer(4)
-            .AddLayer(4)
-            .AddOutputLayer();
+            .AddInputLayer(AndTrainingData.InputShape)
+            .AddFullyConnectedLayer(4)
+            .AddFullyConnectedLayer(4)
+            .AddFullyConnectedOutputLayer(AndTrainingData.OutputShape);
 
         private static TrainingData AndTrainingData => new TrainingData()
             .Input(0, 0).Output(0)

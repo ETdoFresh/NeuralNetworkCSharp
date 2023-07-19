@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace NeuralNetwork.ArrayModels
@@ -9,7 +8,7 @@ namespace NeuralNetwork.ArrayModels
     /// </summary>
     public class TrainingData
     {
-        private Dictionary<double[], double[]> pairs = new();
+        private Dictionary<double[], double[]> pairs = new Dictionary<double[], double[]>();
         public double[][] Inputs => pairs.Keys.ToArray();
         public double[][] Outputs => pairs.Values.ToArray();
         public IEnumerable<KeyValuePair<double[], double[]>> Pairs => pairs;
@@ -19,14 +18,14 @@ namespace NeuralNetwork.ArrayModels
 
         public TrainingSetInputsTuple Input(params double[] inputs)
         {
-            pairs.Add(inputs, Array.Empty<double>());
+            pairs.Add(inputs, new double[0]);
             return new TrainingSetInputsTuple {TrainingData = this, Inputs = inputs};
         }
 
         public class TrainingSetInputsTuple
         {
-            public TrainingData TrainingData { get; init; } = new();
-            public double[] Inputs { get; init; } = Array.Empty<double>();
+            public TrainingData TrainingData { get; set; } = new TrainingData();
+            public double[] Inputs { get; set; } = new double[0];
 
             public TrainingData Output(params double[] outputs)
             {

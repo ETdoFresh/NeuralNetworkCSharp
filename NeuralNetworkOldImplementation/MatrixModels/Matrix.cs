@@ -5,7 +5,7 @@ namespace NeuralNetwork.MatrixModels
 {
     public class Matrix
     {
-        internal static Matrix Empty { get; } = new(0, 0);
+        internal static Matrix Empty { get; } = new Matrix(0, 0);
 
         public int Rows { get; set; }
         public int Columns { get; set; }
@@ -175,7 +175,7 @@ namespace NeuralNetwork.MatrixModels
             }
             else
             {
-                Matrix minor = new Matrix(Rows - 1, Columns - 1);
+                var minor = new Matrix(Rows - 1, Columns - 1);
                 for (var j = 0; j < Rows - 1; j++)
                 {
                     for (var k = 0; k < Columns - 1; k++)
@@ -240,7 +240,7 @@ namespace NeuralNetwork.MatrixModels
 
         private Matrix Clone()
         {
-            Matrix clone = new(Rows, Columns);
+            var clone = new Matrix(Rows, Columns);
             for (var i = 0; i < Values.Length; i++)
                 clone.Values[i] = Values[i];
             return clone;
@@ -279,7 +279,7 @@ namespace NeuralNetwork.MatrixModels
 
         public override string ToString()
         {
-            StringBuilder sb = new();
+            var sb = new StringBuilder();
             for (var i = 0; i < Rows; i++)
             {
                 for (var j = 0; j < Columns; j++)

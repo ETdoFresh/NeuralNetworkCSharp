@@ -11,11 +11,11 @@ namespace NeuralNetwork.ArrayModels
         public double LearningRate { get; set; } = 0.1;
         public string LossFunction { get; set; } = "Undefined/Mean Squared Error";
         public int TrainedEpochs { get; set; }
-        public List<Layer> Layers { get; set; } = new();
-        public List<Connection> Connections { get; set; } = new();
+        public List<Layer> Layers { get; set; } = new List<Layer>();
+        public List<Connection> Connections { get; set; } = new List<Connection>();
 
         protected TrainingData TrainingData { get; private set; } = new TrainingData();
-        protected List<Neuron> Neurons { get; } = new();
+        protected List<Neuron> Neurons { get; } = new List<Neuron>();
 
         public Model()
         {

@@ -56,14 +56,20 @@ namespace NeuralNetwork.ArrayModels
         {
             var displayedEpoch = TrainedEpochs + 1;
             var errorSum = 0.0;
-            foreach (var (input, expectedOutput) in TrainingData.Pairs)
+            foreach (var kvp in TrainingData.Pairs)
             {
+                var input = kvp.Key;
+                var expectedOutput = kvp.Value;
                 var output = Predict(input);
                 errorSum += ComputeDisplayError(expectedOutput, output);
                 if (displayedEpoch % epochDisplayInterval == 0)
-                    Console.WriteLine("Epoch: " + displayedEpoch + " Input: " + string.Join(", ", input) +
-                                      " Expected output: " + string.Join(", ", expectedOutput) + " Output: " +
-                                      string.Join(", ", output));
+                {
+                    var inputs = string.Join(", ", input.Select(i => i.ToString("0.00")).ToArray());
+                    var expectedOutputs = string.Join(", ", expectedOutput.Select(i => i.ToString("0.00")).ToArray());
+                    var outputs = string.Join(", ", output.Select(i => i.ToString("0.00")).ToArray());
+                    Console.WriteLine(
+                        $"Epoch: {displayedEpoch} Input: {inputs} Expected output: {expectedOutputs} Output: {outputs}");
+                }
             }
 
             if (displayedEpoch % epochDisplayInterval == 0)
@@ -72,8 +78,10 @@ namespace NeuralNetwork.ArrayModels
 
         public void BackPropagate()
         {
-            foreach (var (input, expectedOutput) in TrainingData.Pairs)
+            foreach (var kvp in TrainingData.Pairs)
             {
+                var input = kvp.Key;
+                var expectedOutput = kvp.Value;
                 Predict(input);
                 BackPropagate(expectedOutput);
             }
@@ -159,8 +167,10 @@ namespace NeuralNetwork.ArrayModels
         public override void PrintInitialError()
         {
             var error = 0.0;
-            foreach (var (input, expectedOutput) in TrainingData.Pairs)
+            foreach (var kvp in TrainingData.Pairs)
             {
+                var input = kvp.Key;
+                var expectedOutput = kvp.Value;
                 var output = Predict(input);
                 error += ComputeDisplayError(expectedOutput, output);
             }

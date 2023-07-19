@@ -11,10 +11,10 @@ namespace NeuralNetwork.MatrixModels
         public double LearningRate { get; set; } = 0.1;
         public string LossFunction { get; set; } = "Undefined/Mean Squared Error";
         public int TrainedEpochs { get; set; }
-        public List<Matrix> Weights { get; set; } = new();
-        public List<Matrix> Biases { get; set; } = new();
+        public List<Matrix> Weights { get; set; } = new List<Matrix>();
+        public List<Matrix> Biases { get; set; } = new List<Matrix>();
         protected TrainingData TrainingData { get; private set; } = new TrainingData();
-        protected List<Matrix> outputAs { get; set; } = new();
+        protected List<Matrix> outputAs { get; set; } = new List<Matrix>();
         private int _inputNeuronCount = -1;
 
 

@@ -7,8 +7,8 @@ namespace NeuralNetwork.MatrixModels
     {
         private int Epochs { get; set; } = 100;
         private double LearningRate { get; set; } = 0.1;
-        private NeuralNetwork NeuralNetwork { get; } = new();
-        private TrainingData TrainingData { get; set; } = new();
+        private NeuralNetwork NeuralNetwork { get; } = new NeuralNetwork();
+        private TrainingData TrainingData { get; set; } = new TrainingData();
 
         public NetworkSolver AddTrainingSet(TrainingData trainingData)
         {
@@ -47,7 +47,7 @@ namespace NeuralNetwork.MatrixModels
         //     var error = 0.0;
         //     foreach (var (input, expectedOutput) in TrainingData.Pairs)
         //     {
-        //         var output = NeuralNetwork.Compute(input);
+        //         var output = NeuralNetworkOldImplementation.Compute(input);
         //         error += ComputeDisplayError(expectedOutput, output);
         //     }
         //
@@ -75,8 +75,8 @@ namespace NeuralNetwork.MatrixModels
         //         var averageError = 0.0;
         //         foreach (var (input, expectedOutput) in TrainingData.Pairs)
         //         {
-        //             var output = NeuralNetwork.Compute(input);
-        //             NeuralNetwork.BackPropagate(expectedOutput, LearningRate);
+        //             var output = NeuralNetworkOldImplementation.Compute(input);
+        //             NeuralNetworkOldImplementation.BackPropagate(expectedOutput, LearningRate);
         //             averageError += ComputeDisplayError(expectedOutput, output);
         //             if (epoch % epochDisplayInterval == 0) Console.WriteLine("Epoch: " + epoch + " Input: " + string.Join(", ", input) + " Expected output: " + string.Join(", ", expectedOutput) + " Output: " + string.Join(", ", output));
         //         }
